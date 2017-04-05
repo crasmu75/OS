@@ -21,5 +21,6 @@ struct sleepy_dev {
   struct mutex sleepy_mutex; 
   struct cdev cdev;
   wait_queue_head_t sleeping_prcss;
+  int cond_var;
 };
 #endif /* SLEEPY_H_1727_INCLUDED */

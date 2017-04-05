@@ -94,26 +94,46 @@ sleepy_read(struct file *filp, char __user *buf, size_t count,
     return -EINTR;
 	
   /* YOUR CODE HERE */
-  wakeup_interruptable(&dev);
+  dev->cond_var = 1;
+  wake_up_interruptable(dev->sleeping_prcss);
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
   return retval;
 }
-                
+     
+// count is number of bytes
+//           
 ssize_t 
 sleepy_write(struct file *filp, const char __user *buf, size_t count, 
 	     loff_t *f_pos)
 {
   struct sleepy_dev *dev = (struct sleepy_dev *)filp->private_data;
   ssize_t retval = 0;
+  int num_secs;
+  long sleep_res;
 	
   if (mutex_lock_killable(&dev->sleepy_mutex))
     return -EINTR;
 	
   /* YOUR CODE HERE */
-  if(count > 0)
-	
+  if(count == 4) {
+    copy_from_user(&num_secs, buf, count);
+    if(num_secs > 0)
+      sleep_res = wait_event_interruptable_timeout(dev->sleeping_prcss, dev->cond_var, num_secs * HZ);
+      
+      //timeout elapsed
+      if(sleep_res == 0 || sleep_res == 1)
+        return 0;
+      //was interrupted by something
+      else if(sleep_res == -ERESTARTSYS)
+        return -1;
+      //jiffies remain after being woken
+      else
+        return sleep_res/HZ;
+  }	
+  else
+    return EINVAL;
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
