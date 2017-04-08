@@ -29,6 +29,8 @@
 #include <linux/mutex.h>
 
 #include <asm/uaccess.h>
+#include <linux/wait.h>
+#include <linux/sched.h>
 
 #include "sleepy.h"
 
@@ -95,7 +97,7 @@ sleepy_read(struct file *filp, char __user *buf, size_t count,
 	
   /* YOUR CODE HERE */
   dev->cond_var = 1;
-  wake_up_interruptable(dev->sleeping_prcss);
+  wake_up_interruptible(&dev->sleeping_prcss);
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
@@ -120,7 +122,7 @@ sleepy_write(struct file *filp, const char __user *buf, size_t count,
   if(count == 4) {
     copy_from_user(&num_secs, buf, count);
     if(num_secs > 0)
-      sleep_res = wait_event_interruptable_timeout(dev->sleeping_prcss, dev->cond_var, num_secs * HZ);
+      sleep_res = wait_event_interruptible_timeout(dev->sleeping_prcss, dev->cond_var, num_secs * HZ);
       
       //timeout elapsed
       if(sleep_res == 0 || sleep_res == 1)
@@ -164,10 +166,6 @@ static int
 sleepy_construct_device(struct sleepy_dev *dev, int minor, 
 			struct class *class)
 {
-  /* YOUR CODE HERE */
-  init_waitqueue_head(dev->sleeping_prcss);
-
-  /* END YOUR CODE */
   int err = 0;
   dev_t devno = MKDEV(sleepy_major, minor);
   struct device *device = NULL;
@@ -177,6 +175,9 @@ sleepy_construct_device(struct sleepy_dev *dev, int minor,
   /* Memory is to be allocated when the device is opened the first time */
   dev->data = NULL;     
   mutex_init(&dev->sleepy_mutex);
+  /* YOUR CODE HERE */
+  init_waitqueue_head(&dev->sleeping_prcss);
+  dev->cond_var = 0;
     
   cdev_init(&dev->cdev, &sleepy_fops);
   dev->cdev.owner = THIS_MODULE;
