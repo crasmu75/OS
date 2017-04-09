@@ -91,13 +91,17 @@ sleepy_read(struct file *filp, char __user *buf, size_t count,
 {
   struct sleepy_dev *dev = (struct sleepy_dev *)filp->private_data;
   ssize_t retval = 0;
+  int minor;
 	
   if (mutex_lock_killable(&dev->sleepy_mutex))
     return -EINTR;
 	
   /* YOUR CODE HERE */
   dev->cond_var = 1;
-  wake_up_interruptible(dev->sleeping_prcss);
+  wake_up_interruptible(&dev->sleeping_prcss);
+
+  minor = (int)iminor(filp->f_path.dentry->d_inode);
+  printk("SLEEPY_WRITE DEVICE (%d): remaining = %zd \n", minor, retval);
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
@@ -114,6 +118,7 @@ sleepy_write(struct file *filp, const char __user *buf, size_t count,
   ssize_t retval = 0;
   int num_secs;
   long sleep_res;
+  int minor;
 	
   if (mutex_lock_killable(&dev->sleepy_mutex))
     return -EINTR;
@@ -122,20 +127,26 @@ sleepy_write(struct file *filp, const char __user *buf, size_t count,
   if(count == 4) {
     copy_from_user(&num_secs, buf, count);
     if(num_secs > 0)
+      mutex_unlock(&dev->sleepy_mutex);
       sleep_res = wait_event_interruptible_timeout(dev->sleeping_prcss, dev->cond_var, num_secs * HZ);
-      
+      if (mutex_lock_killable(&dev->sleepy_mutex))
+    	return -EINTR;
+
       //timeout elapsed
       if(sleep_res == 0 || sleep_res == 1)
-        return 0;
+        retval = 0;
       //was interrupted by something
       else if(sleep_res == -ERESTARTSYS)
-        return -1;
+        retval = -1;
       //jiffies remain after being woken
       else
-        return sleep_res/HZ;
+        retval = sleep_res/HZ;
+
+      minor = (int)iminor(filp->f_path.dentry->d_inode);
+      printk("SLEEPY_WRITE DEVICE (%d): remaining = %zd \n", minor, retval);
   }	
   else
-    return EINVAL;
+    retval = EINVAL;
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
