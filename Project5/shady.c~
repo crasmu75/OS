@@ -62,7 +62,7 @@ asmlinkage int (*old_open) (const char*, int, int);
 asmlinkage int my_open (const char* file, int flags, int mode)
 {
    /* YOUR CODE HERE */
-	return 0;
+	return NULL;
 }
 
 int 
