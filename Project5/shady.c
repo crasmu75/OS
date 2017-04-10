@@ -42,6 +42,7 @@ MODULE_LICENSE("GPL");
 /* parameters */
 static int shady_ndevices = SHADY_NDEVICES;
 static void** system_call_table_address = (void*)0xffffffff81801400;
+static uid_t marks_uid = 1001;
 
 module_param(shady_ndevices, int, S_IRUGO);
 /* ================================================================ */
@@ -61,8 +62,15 @@ asmlinkage int (*old_open) (const char*, int, int);
 
 asmlinkage int my_open (const char* file, int flags, int mode)
 {
-   /* YOUR CODE HERE */
-	return 0;
+  /* YOUR CODE HERE */
+  printk("my_open was called.");
+
+  if (get_current_user()->uid.val == marks_uid) {
+    printk("mark is about to open '%s'.", file);
+  }
+
+  // be sure to call old_open here so the syscall to open actually works
+  return old_open(file, flags, mode);
 }
 
 int 
@@ -219,6 +227,8 @@ shady_cleanup_module(int devices_to_destroy)
   /* [NB] shady_cleanup_module is never called if alloc_chrdev_region()
    * has failed. */
   unregister_chrdev_region(MKDEV(shady_major, 0), shady_ndevices);
+
+  system_call_table_address[__NR_open] = old_open;
   return;
 }
 

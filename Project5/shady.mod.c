@@ -34,6 +34,7 @@ __attribute__((section("__versions"))) = {
 	{ 0xc9296d71, __VMLINUX_SYMBOL_STR(device_destroy) },
 	{ 0x1eecf3fc, __VMLINUX_SYMBOL_STR(mutex_unlock) },
 	{ 0x5f6629de, __VMLINUX_SYMBOL_STR(mutex_lock_killable) },
+	{ 0xe94c016a, __VMLINUX_SYMBOL_STR(current_task) },
 	{ 0x27e1a049, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0xbdfb6dbb, __VMLINUX_SYMBOL_STR(__fentry__) },
 };
@@ -44,4 +45,4 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "6D8CD84B43473B92F30FB26");
+MODULE_INFO(srcversion, "4E7F10566D2CC7465D1FDD7");
