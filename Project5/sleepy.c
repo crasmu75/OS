@@ -12,7 +12,10 @@
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation.
- ======================================================================== */
+ ========================================================================
+ * Implemented by Camille Rasmussen
+ * CS 5460 
+ * 4/10/17 */
 
 #include <linux/version.h>
 #include <linux/module.h>
@@ -99,17 +102,13 @@ sleepy_read(struct file *filp, char __user *buf, size_t count,
   /* YOUR CODE HERE */
   dev->cond_var = 1;
   wake_up_interruptible(&dev->sleeping_prcss);
-
-  minor = (int)iminor(filp->f_path.dentry->d_inode);
-  printk("SLEEPY_READ DEVICE (%d): remaining = %zd \n", minor, retval);
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
   return retval;
 }
      
-// count is number of bytes
-//           
+// count is number of bytes          
 ssize_t 
 sleepy_write(struct file *filp, const char __user *buf, size_t count, 
 	     loff_t *f_pos)
@@ -141,9 +140,6 @@ sleepy_write(struct file *filp, const char __user *buf, size_t count,
       //jiffies remain after being woken
       else
         retval = sleep_res/HZ;
-
-      minor = (int)iminor(filp->f_path.dentry->d_inode);
-      printk("SLEEPY_WRITE DEVICE (%d): remaining = %zd \n", minor, retval);
   }	
   else
     retval = EINVAL;

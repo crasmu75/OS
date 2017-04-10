@@ -101,7 +101,7 @@ sleepy_read(struct file *filp, char __user *buf, size_t count,
   wake_up_interruptible(&dev->sleeping_prcss);
 
   minor = (int)iminor(filp->f_path.dentry->d_inode);
-  printk("SLEEPY_WRITE DEVICE (%d): remaining = %zd \n", minor, retval);
+  printk("SLEEPY_READ DEVICE (%d): remaining = %zd \n", minor, retval);
   /* END YOUR CODE */
 	
   mutex_unlock(&dev->sleepy_mutex);
